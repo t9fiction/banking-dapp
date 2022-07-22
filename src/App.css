@@ -14,16 +14,30 @@
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+  background-color: #11596e;
+  min-height: 10vh;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: calc(12px + 2vmin);
   color: white;
 }
 
+.moving-background{
+  z-index: -1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* background-color: rgb(170, 224, 217); */
+  background-image: url("./assets/background/parallax-bg.gif");
+  background-size: cover;
+  background-repeat: repeat;
+  background-attachment: fixed;
+  background-position: 40% 40%;
+}
 .App-link {
   color: #61dafb;
 }
