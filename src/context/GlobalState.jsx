@@ -3,14 +3,13 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import CoinbaseWalletSDK from '@coinbase/wallet-sdk';
 import Authereum from "authereum";
 // import MewConnect from "@myetherwallet/mewconnect-web-client";
-import { ethers, BigNumber } from 'ethers';
+import { ethers } from 'ethers';
 import Web3Modal from "web3modal";
-import Modal from '../Modal.css'
-
 import bankArtifact from '../artifacts/contracts/Bank.sol/Bank.json';
 import maticArtifact from '../artifacts/contracts/Matic.sol/Matic.json';
 import shibArtifact from '../artifacts/contracts/Shib.sol/Shib.json';
 import usdtArtifact from '../artifacts/contracts/Usdt.sol/Usdt.json';
+import Modal from '../components/Modal'
 
 // const { ethereum } = window;
 const CONTRACT_ADDRESS = "0x985145dc3B4b828fFaDcDb84DaA51e49aBF02828"
@@ -30,7 +29,6 @@ export const GlobalContext = createContext();
 export const GlobalProvider = ({ children }) => {
     const [web3Modal, setWeb3Modal] = useState(null)
     const [bankContract, setBankContract] = useState(undefined);
-    const [balance, setBalance] = useState();
     const [currentAccount, setCurrentAccount] = useState("");
     const [mintAmount, setMintAmount] = useState(1)
     const [tokenSymbols, setTokenSymbols] = useState([])
@@ -38,6 +36,9 @@ export const GlobalProvider = ({ children }) => {
     const [tokenBalances, setTokenBalances] = useState({});
     const [showModal, setShowModal] = useState(false);
     const [selectedSymbol, setSelectedSymbol] = useState(undefined);
+    // const [signer, setSigner] = useState(undefined);
+    const [amount, setAmount] = useState(0);
+    const [isDeposit, setIsDeposit] = useState(true);
     // const isConnected = Boolean(accounts[0]);
 
     const providerOptions = {
@@ -153,28 +154,51 @@ export const GlobalProvider = ({ children }) => {
     }
 
     const displayModal = (symbol) => {
-        setShowModal(true)
         setSelectedSymbol(symbol)
+        setShowModal(true)
     }
 
-    // const mintToken = async () => {
-    //     try {
-    //         const contract = await getContract();
-    //         const response = await contract.mint(BigNumber.from(mintAmount), {
-    //             value: ethers.utils.parseEther((0.02 * mintAmount).toString())
-    //         })
-    //         // const response = await contract.mintNFTs(1, {
-    //         //     value: ethers.utils.parseEther('0.01')
-    //         // });
-    //         await response.wait();
-    //         // getMintedStatus();
-    //         // getCount();
-    //     } catch (error) {
-    //         console.log("error: ", error)
-    //     }
+    const depositTokens = async (wei, symbol) => {
+        const provider = await web3Modal.connect();
+        const ethersProvider = new ethers.providers.Web3Provider(provider)
+        const signer = ethersProvider.getSigner();
+        if (symbol === 'Eth') {
+            signer?.sendTransaction({
+                to: bankContract.address,
+                value: wei
+                // value: wei
+            })
+        } else {
+            const tokenContract = tokenContracts[symbol]
+            console.log("tokenContract", tokenContract)
 
-    // }
+            const tx = await tokenContract?.approve(bankContract.address, wei)
+            const txResult = await tx.wait
+            console.log("txResult : ", txResult)
+            await bankContract?.connect(signer).depositTokens(wei, toBytes32(symbol))
+        }
+    }
 
+    const withdrawTokens = async (wei, symbol) => {
+        const provider = await web3Modal.connect();
+        const ethersProvider = new ethers.providers.Web3Provider(provider)
+        const signer = ethersProvider.getSigner();
+        if (symbol === 'Eth') {
+            bankContract.connect(signer).withdrawEther(wei)
+        } else {
+            bankContract.connect(signer).withdrawTokens(wei, toBytes32(symbol))
+        }
+    }
+
+    const depositOrWithdraw = async (e, symbol) => {
+        e.preventDefault();
+        const wei = toWei(amount);
+        if (isDeposit) {
+            depositTokens(wei, symbol)
+        } else {
+            withdrawTokens(wei, symbol)
+        }
+    }
     // const testFun = async () => {
     //     const provider = await web3Modal.connect();
     //     const ethersProvider = new ethers.providers.Web3Provider(provider)
@@ -184,7 +208,6 @@ export const GlobalProvider = ({ children }) => {
     //     // console.log(acc,"accFun")
     //     await getTokenBalances(acc);
     // }
-
 
     useEffect(() => {
         const init = async () => {
@@ -200,11 +223,12 @@ export const GlobalProvider = ({ children }) => {
                 // console.log(acc)
                 // if (tokenSymbols) {
                 // }
+                // await getTokenBalances(currentAccount);
             }
         }
         init();
     }, [web3Modal]);
-    
+
     useEffect(() => {
         const init = async () => {
             await whiteListed().then((result) => {
@@ -220,7 +244,7 @@ export const GlobalProvider = ({ children }) => {
 
     return (
         <GlobalContext.Provider value={{
-            setMintAmount, mintAmount, selectedSymbol, displayModal, Modal, showModal, setShowModal, tokenBalances, toRound, currentAccount, tokenSymbols, bankContract, getTokenContracts, whiteListed, getModalConnect, getTokenBalance, disconnectWallet, getContract, setCurrentAccount
+            setMintAmount, mintAmount, selectedSymbol, depositOrWithdraw, isDeposit, setIsDeposit, setAmount, displayModal, Modal, showModal, setShowModal, tokenBalances, toRound, currentAccount, tokenSymbols, bankContract, whiteListed, getModalConnect, getTokenBalance, disconnectWallet, getContract, setCurrentAccount
         }} >
             {children}
         </GlobalContext.Provider>

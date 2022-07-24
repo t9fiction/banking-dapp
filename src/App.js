@@ -16,7 +16,7 @@ function App() {
         </header>
         <Mainpage />
       </div>
-      {/* <div className='moving-background'></div> */}
+      <div className='moving-background'></div>
     </div>
   );
 }

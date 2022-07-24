@@ -4,7 +4,7 @@ import { GlobalStore } from '../context/GlobalState'
 
 
 const Mainpage = () => {
-  const { bankContract, Modal, selectedSymbol, showModal, setShowModal, displayModal, tokenSymbols, toRound, testFun, tokenBalances, currentAccount, getContract, getTokenContracts, whiteListed } = GlobalStore();
+  const { bankContract, Modal, selectedSymbol, showModal, setShowModal, displayModal, depositOrWithdraw, toRound, tokenBalances, currentAccount, getContract, isDeposit, setIsDeposit, setAmount, whiteListed } = GlobalStore();
 
 
   const handleContract = async () => {
@@ -23,30 +23,36 @@ const Mainpage = () => {
     // await getTokenContracts(tokenSymbols);
   }
 
-  const disModal = async () => {
-    await testFun()
-    displayModal()
-  }
-
   return (
     <div>
       {currentAccount ?
         <div>
           <div className='list-group'>
             <div className='list-group-item'>
-              {tokenSymbols ? <div>Hello</div> : <div>no</div>}
-              {Object.keys(tokenBalances).map((symbol, idx) => {
+              {Object.keys(tokenBalances).map((symbol, idx) => (
                 <div className=" row d-flex py-3" key={idx}>
-
                   <div className="col-md-6">
                     <div>{symbol.toUpperCase()}</div>
-                  </div>
-                  <div className="d-flex gap-4 col-md-6">
+                  {/* </div>
+                  <div className="d-flex gap-4 col-md-6"> */}
                     <small className="opacity-50 text-nowrap">{toRound(tokenBalances[symbol])}</small>
                   </div>
 
+                  <div className="d-flex gap-4 col-md-6">
+                    <button onClick={() => displayModal(symbol)} className="btn btn-primary">Deposit/Withdraw</button>
+                    <Modal
+                      show={showModal}
+                      onClose={() => setShowModal(false)}
+                      symbol={selectedSymbol}
+                      depositOrWithdraw={depositOrWithdraw}
+                      isDeposit={isDeposit}
+                      setIsDeposit={setIsDeposit}
+                      setAmount={setAmount}
+                    />
+                  </div>
                 </div>
-              })}
+              )
+              )}
             </div>
 
           </div>
